@@ -36,8 +36,9 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 
 TARGET_HINTS = (
-    "target", "label", "class", "y", "satisfaction", "churn", "price",
-    "sale", "default", "risk", "outcome", "readmitted", "response",
+    "target", "label", "y", "satisfaction", "churn", "risk",
+    "outcome", "readmitted", "default", "response",
+    "price", "sale", "class",
 )
 
 

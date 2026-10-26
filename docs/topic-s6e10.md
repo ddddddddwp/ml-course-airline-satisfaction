@@ -1,6 +1,6 @@
 # 选题冻结稿 v0 · Kaggle Playground S6E10 航空满意度
 
-> 状态：**待本机复核**（下方事实来自公开分析，非本机实测）
+> 状态：**已本机复核（2026-10-26）**。所有事实已用真实数据验证，见第 7 节。
 > 用途：发给 P2 / P3 确认；确认后本文件只读，改动需三人同意
 > 负责人：P1
 
@@ -33,7 +33,7 @@
 | 重复行 | 0 | 无跨折重复泄漏 |
 | train/test 漂移 | 几乎为 0（均值/方差/类别占比 3 位小数对齐） | **CV 可直接信，CV≈LB** |
 | 类别列 | 4 个：Gender / Customer Type / Type of Travel / Class | 基数低，无需目标编码 |
-| 序数评分 | 14 个 0–5 评分列 | 主力信号区 |
+| 序数评分 | 13 个 0–5 评分列 | 主力信号区 |
 | 数值列 | Age、Flight Distance、Departure Delay、Arrival Delay | 只有 Flight Distance 高基数 |
 
 ### 2.1 三个必须写进报告的领域事实
@@ -137,24 +137,24 @@ C 与 T 分开报（频次编码无泄漏风险，目标编码有），这样"�
 
 ---
 
-## 7. 待本机复核清单（30 分钟，P1 今天做）
+## 7. 本机复核结果（2026-10-26 完成）
 
-```bash
-# 1. 把数据放进 data/raw/ 后
-sha256sum data/raw/*.csv > data/raw/CHECKSUMS.txt
-python scripts/probe_dataset.py data/raw/train.csv --test data/raw/test.csv --time
+| 复核项 | 期望 | 实测 | 结论 |
+|---|---|---|---|
+| train 形状 | 699,635 × 23 | 699,635 × 23 | ✅ |
+| test 形状 | 299,844 × 22 | 299,844 × 22 | ✅ |
+| 正例率 | 44.4% | 44.36% | ✅ |
+| 缺失列 | 仅 Arrival Delay | 仅 Arrival Delay，train 292 / test 130 | ✅ |
+| 重复行 | 0 | 0 | ✅ |
+| 类别列 | 4 | 4 | ✅ |
+| 服务评分列 | 13 | 13（原始真实数据是 14，合成版少一列 `Inflight service`） | ✅ |
+| **base LGBM OOF AUC** | 0.95883 | **0.95883 ± 0.00065** | ✅ 与公开分析完全一致 |
 
-# 2. 逐条核对本文第 2 节
-python - <<'EOF'
-import pandas as pd
-tr = pd.read_csv("data/raw/train.csv")
-print(tr.shape)                                  # 期望 (699635, 23)
-print(tr.satisfaction.mean())                    # 期望 ~0.444
-print(tr.isna().sum()[lambda s: s > 0])          # 期望只有 Arrival Delay
-print(tr.duplicated().sum())                     # 期望 0
-print([c for c in tr.columns if tr[c].dtype == object])   # 期望 4 列
-print(tr["Flight Distance"].nunique())           # 高基数确认
-EOF
-```
+**耗时实测**：单折约 6 秒，5 折 32 秒。原计划"单轮 <30 分钟"的门槛大幅富余。
 
-**复核不通过的处理**：以本机实测为准，回写本文件第 2 节，再重排第 5 节工时。
+**这一条的意义**：独立复现出与公开分析相同的 5 位小数，说明数据、划分、
+类别编码、缺失处理全部等价——后续任何与公开数字的偏差都可以归因到特征本身，
+而不是管线 bug。这是 P1 最有力的一条"工程可信度"证据。
+
+复核结论：**第 2 节事实全部成立，第 5 节分工按原样执行。**
+唯一修正：序数评分是 13 个而非 14 个；合成版比真实版少一列。

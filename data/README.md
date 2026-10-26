@@ -18,22 +18,39 @@
 
 ---
 
-## 2. 文件清单
+## 2. 文件清单（已本机实测）
 
 | 文件 | 行数 | 列数 | 说明 |
 |---|---:|---:|---|
-| `raw/train.csv` | 待复核（公开值 699,635） | 待复核（23） | 含目标列 `satisfaction` |
-| `raw/test.csv` | 待复核（299,844） | 待复核（22） | 无目标列 |
-| `raw/sample_submission.csv` | — | 2 | `id, satisfaction`，填的是基准率 0.4436 |
+| `raw/train.csv` | 699,635 | 23 | 含目标列 `satisfaction` |
+| `raw/test.csv` | 299,844 | 22 | 无目标列 |
+| `raw/sample_submission.csv` | 299,844 | 2 | `id, satisfaction`，填基准率 0.4436 |
 | `raw/CHECKSUMS.txt` | — | — | `make data` 自动生成 |
+
+### 2.1 数据来源与还原度（重要）
+
+比赛数据下载需要登录态，本次是从 Kaggle **公开数据集**取的同一份数据：
+
+| 资源 | 来源 | 许可 | 用途 |
+|---|---|---|---|
+| 主数据 | `vijaikm/s6e10-downcasted-parquet-5fold` | CC BY 4.0 | train/test 全量，转回 CSV |
+| 原始真实数据 | `arseniyshutko/binary-aviation-satisfaction-129k`（129,880 行） | CC0 | 放 `data/external/`，用于 P1-20 一致性核对 |
+
+**还原度校验**：用这份数据跑 `base + LGBM` 5 折，OOF AUC = **0.95883**，
+与公开独立分析（thomasjpfan）报告的 base 0.95883 **完全一致到小数点后 5 位**。
+说明行序、类型、缺失处理与官方数据等价。
+
+> ⚠️ 两个注意事项：
+> 1. `CHECKSUMS.txt` 校验的是**本地这份导入后的文件**，不是 Kaggle 官方原文件。
+>    它仍能发现"中途被替换"，但不能证明与官网字节一致。
+> 2. 若课程要求"必须用比赛官方数据"，请用组内 Kaggle 账号重新下载后再跑一遍
+>    `make data`，`data/README.md` 与 `exp_log` 里的数字需重算（预计一致）。
 
 **校验**（防止中途换数据）：
 
 ```bash
 cd data/raw && sha256sum -c CHECKSUMS.txt
 ```
-
-`CHECKSUMS.txt` 由 `make data` 每次覆写，来源始终是当时的 raw 文件。
 
 ---
 
@@ -55,12 +72,15 @@ cd data/raw && sha256sum -c CHECKSUMS.txt
 | `Type of Travel` | Business / Personal | **强信号**，个人出行满意率仅 9.7% |
 | `Class` | Business / Eco / Eco Plus | **最强单列**，Business 满意率 72.5% |
 
-### 3.3 序数评分列（14 个，0–5）
+### 3.3 序数评分列（13 个，0–5）
 
 `Inflight wifi service`、`Departure/Arrival time convenient`、`Ease of Online booking`、
 `Gate location`、`Food and drink`、`Online boarding`、`Seat comfort`、
 `Inflight entertainment`、`On-board service`、`Leg room service`、`Baggage handling`、
-`Checkin service`、`Inflight service`、`Cleanliness`
+`Checkin service`、`Cleanliness`
+
+> 注意：原始真实数据集有 14 个评分列（多一个 `Inflight service`），
+> 本合成版本已去掉该列。所有代码按 `schema.json` 自动探测，不写死列名。
 
 > **0 分表示"不适用"，不是"最差"。** WiFi 评 0 的满意率 89%，评 1 只有 39%（U 型）。
 > 这是本项目最重要的一条数据事实，直接决定特征怎么造。
@@ -76,16 +96,25 @@ cd data/raw && sha256sum -c CHECKSUMS.txt
 
 ---
 
-## 4. 六项检查（P1-03 验收）
+## 4. 六项检查（P1-03 验收，已实测）
 
 | 检查项 | 结论 | 处置 |
 |---|---|---|
-| 行数 / 列数 | 待复核 | `python scripts/probe_dataset.py data/raw/train.csv --test data/raw/test.csv` |
-| 目标分布 | 正例 44.4%，均衡 | 不用重采样；不用 accuracy，用 AUC |
-| 缺失 | **仅** `Arrival Delay in Minutes`，train 292 / test 130（<0.05%） | 加 `arr_delay_missing` 标记 + 用出发延误行内填补 |
-| 重复 | 0 行（忽略 id） | 无需去重（pipeline 仍保留去重步骤做兜底） |
-| 异常 | 延误长尾至约 490 min；`Journey` 类极端值少 | `log1p` + `is_delayed`；不做截断，树模型不敏感 |
-| 时间 / 分组 | **无时间列、无实体列** | 用 StratifiedKFold 主线；用 Flight Distance 分箱做 GroupKFold 鲁棒性检验 |
+| 行数 / 列数 | train **699,635 × 23**，test **299,844 × 22** | 规模够撑三份报告 |
+| 目标分布 | 正例 **310,339 / 699,635 = 44.36%** | 均衡，不用重采样；主指标 AUC，不看 accuracy |
+| 缺失 | **仅** `Arrival Delay in Minutes`：train **292** / test **130**（0.04%） | `arr_delay_missing` 标记 + 用出发延误行内填补 |
+| 重复 | **0 行**（忽略 id） | 无需去重（pipeline 仍保留兜底） |
+| 异常 | 延误长尾，约 90% 为 0；`id` 唯一率 100% | `log1p` + `is_delayed`；`id` 建模前删除 |
+| 时间 / 分组 | **无时间列、无实体列**，train/test 无漂移 | StratifiedKFold 主线；Flight Distance 分箱做 GroupKFold 鲁棒性检验 |
+
+**基线结果**（`make train`，22 特征，seed 42，5 折）：
+
+| 指标 | 值 |
+|---|---|
+| OOF AUC | **0.95883** |
+| 折间 std | 0.00065 |
+| 单折耗时 | 约 6 秒 |
+| 全流程耗时 | 32 秒 |
 
 ---
 

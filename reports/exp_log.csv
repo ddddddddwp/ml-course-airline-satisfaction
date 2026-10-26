@@ -1,1 +1,9 @@
 run_id,date,owner,stage,model,feat_ver,split_ver,params_hash,cv_mean,cv_std,public_lb,git_commit,notes
+P1_feat_lgbm_base_1026,2026-10-26,P1,feat,lgbm,base,v1,2e76642b,0.958829,0.000648,,609f233,n_feat=22
+P1_feat_lgbm_base_1026_abl,2026-10-26,P1,feat,lgbm,base,v1,2e76642b,0.958829,0.000648,,609f233,n_feat=22
+P1_feat_lgbm_A_1026_abl,2026-10-26,P1,feat,lgbm,A,v1,a8e66984,0.9588,0.000678,,609f233,n_feat=35
+P1_feat_lgbm_B_1026_abl,2026-10-26,P1,feat,lgbm,B,v1,8270886e,0.958636,0.000655,,609f233,n_feat=46
+P1_feat_lgbm_C_1026_abl,2026-10-26,P1,feat,lgbm,C,v1,61a5a8e1,0.959413,0.000677,,609f233,n_feat=24
+P1_feat_lgbm_CT_1026_abl,2026-10-26,P1,feat,lgbm,C+T,v1,77555718,0.960191,0.000583,,609f233,n_feat=25
+P1_feat_lgbm_ABCT_1026_abl,2026-10-26,P1,feat,lgbm,A+B+C+T,v1,e4527dee,0.960092,0.000584,,609f233,n_feat=49
+P1_feat_lr_base_1026_abl,2026-10-26,P1,feat,lr,base,v1,694909ea,0.92155,0.000437,,609f233,n_feat=22
