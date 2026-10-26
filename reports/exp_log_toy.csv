@@ -1,2 +1,0 @@
-run_id,date,owner,stage,model,feat_ver,split_ver,params_hash,cv_mean,cv_std,public_lb,git_commit,notes
-P1_feat_lgbm_ABC_1026_smoke,2026-10-26,P1,feat,lgbm,A+B+C,v1,ee6117bf,0.886955,0.004517,,,n_feat=50

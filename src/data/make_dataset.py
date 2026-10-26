@@ -55,7 +55,8 @@ def main() -> None:
     print(f"[data] 校验和 -> {ck}")
 
     schema = detect_schema(train, cfg)
-    save_schema(schema, cfg["paths"]["reports"] + "/schema.json")
+    schema_path = f"{cfg['paths']['reports']}/schema_{cfg['project']}.json"
+    save_schema(schema, schema_path)
 
     # ---- 1. 去重
     n0 = len(train)

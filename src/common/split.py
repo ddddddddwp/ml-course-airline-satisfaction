@@ -159,7 +159,7 @@ def compare(cfg: dict, score: bool = False) -> None:
     print("\n[compare] 三方案对比")
     print(table.to_string(index=False))
 
-    out = Path(cfg["paths"]["reports"]) / "split_compare.csv"
+    out = Path(cfg["paths"]["reports"]) / f"split_compare_{cfg['project']}.csv"
     out.parent.mkdir(parents=True, exist_ok=True)
     table.to_csv(out, index=False, encoding="utf-8-sig")
     print(f"\n[compare] 已写入 {out}")
