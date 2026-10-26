@@ -2,7 +2,7 @@ PY ?= python3
 CONFIG ?= configs/base.yaml
 export PYTHONPATH := .
 
-.PHONY: help data split split-compare train abl eda importance fdict drop-arrival p1 smoke clean
+.PHONY: help data split split-compare train abl eda importance fdict drop-arrival p1 verify verify-full smoke clean
 
 help:
 	@echo "make data          # raw -> processed（清洗 + 校验和）"
@@ -53,6 +53,12 @@ drop-arrival:
 
 p1: split-compare eda importance fdict drop-arrival
 	@echo "== P1 交付物已全部生成：划分对比 / EDA 图 / 重要性 / 特征字典 / 事后特征实验 =="
+
+verify:
+	$(PY) scripts/verify.py --config $(CONFIG)
+
+verify-full:
+	$(PY) scripts/verify.py --config $(CONFIG) --reproduce
 
 smoke:
 	@echo "== 1/4 生成合成数据（结构与 S6E10 一致）=="
