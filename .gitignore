@@ -10,7 +10,6 @@ data/external/
 
 # 实验产物
 reports/oof/
-reports/figures/*.png
 reports/*toy*
 splits/toy_fold.json
 

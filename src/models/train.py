@@ -79,7 +79,7 @@ def _append_log(cfg: dict, row: dict) -> Path:
 def run_cv(cfg: dict, model: str = "lgbm", groups=("base",), fold_array=None,
            sample: int | None = None, seed: int | None = None, log: bool = True,
            verbose: bool = True, tag: str = "", owner: str = "P1",
-           notes: str = "") -> dict:
+           notes: str = "", drop_cols: list[str] | None = None) -> dict:
     groups = [g for g in groups if g != "base"]
     seed = int(seed if seed is not None else cfg["seed"])
     proc = path_of(cfg, "processed_dir")
@@ -106,6 +106,16 @@ def run_cv(cfg: dict, model: str = "lgbm", groups=("base",), fold_array=None,
                 count_ref = pd.concat([df[cols], test[cols]], ignore_index=True)
 
     X = prepare_X(df, schema, groups, count_ref=count_ref)
+
+    if drop_cols:
+        present = [c for c in drop_cols if c in X.columns]
+        absent = [c for c in drop_cols if c not in X.columns]
+        if present:
+            X = X.drop(columns=present)
+        if verbose:
+            print(f"[train] 剔除列 {present}" + (f"（不存在，已忽略: {absent}）" if absent else ""))
+        if not present:
+            print("[train][警告] 要剔除的列一个都不存在，本次实验等价于原组")
 
     if fold_array is not None:
         fold_array = np.asarray(fold_array)
@@ -163,6 +173,8 @@ def run_cv(cfg: dict, model: str = "lgbm", groups=("base",), fold_array=None,
     cv_mean = float(np.mean(aucs))
     cv_std = float(np.std(aucs))
     feat_ver = "base" if not groups else "+".join(groups)
+    if drop_cols:
+        feat_ver += "-drop"
     run_id = (f"{owner}_feat_{model}_{feat_ver.replace('+', '')}_{date.today():%m%d}"
               + (f"_{tag}" if tag else ""))
 
@@ -183,7 +195,9 @@ def run_cv(cfg: dict, model: str = "lgbm", groups=("base",), fold_array=None,
         "cv_std": round(cv_std, 6),
         "public_lb": "",
         "git_commit": git_commit(),
-        "notes": notes or f"n_feat={n_feat}",
+        "notes": notes or (
+            f"n_feat={n_feat}" + (f"; drop={','.join(drop_cols)}" if drop_cols else "")
+        ),
     }
 
     if verbose:
@@ -221,13 +235,17 @@ def main() -> None:
     ap.add_argument("--tag", default="")
     ap.add_argument("--owner", default="P1")
     ap.add_argument("--notes", default="")
+    ap.add_argument("--drop-cols", default="",
+                    help="逗号分隔，从最终特征矩阵里剔除这些列（用于事后特征实验）")
     ap.add_argument("--no-log", action="store_true")
     args = ap.parse_args()
 
     groups = [g.strip() for g in args.groups.split(",") if g.strip()]
+    drop = [c.strip() for c in args.drop_cols.split(",") if c.strip()]
     run_cv(load_config(args.config), model=args.model, groups=groups,
            sample=args.sample, seed=args.seed, log=not args.no_log,
-           tag=args.tag, owner=args.owner, notes=args.notes)
+           tag=args.tag, owner=args.owner, notes=args.notes,
+           drop_cols=drop or None)
 
 
 if __name__ == "__main__":

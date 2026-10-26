@@ -8,6 +8,7 @@ paths:
   processed_dir: data/toy/processed
   splits: splits/toy_fold.json
   reports: reports
+  figures: reports/figures
   oof_dir: reports/oof
   exp_log: reports/exp_log_toy.csv
 

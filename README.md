@@ -26,6 +26,15 @@ Kaggle Playground Series **S6E10 — Predicting Airline Satisfaction** 的课程
 
 > 一句话：特征工程的价值不在特征本身，而在**模型能不能表达它**。
 
+### 另外三个实验结论
+
+- **划分鲁棒性**：KFold / Stratified / GroupKFold(按距离段分组) 的 CV AUC 分别是
+  0.95877 / 0.95883 / 0.95778。按距离段分组只掉 0.001，说明模型不是靠记住具体航线，而是学到了可迁移的服务信号。
+- **事后特征**：剔除 `Arrival Delay`（飞行后才可知）只掉 **0.00003**——它与起飞延误 r≈0.84、87% 行完全相等，属于冗余。
+  **结论：最终模型可以只使用飞行前即可获得的信息，业务上可部署。**
+- **特征重要性**（LightGBM gain）：Online boarding 42.1%、Inflight wifi 12.8%、
+  Type of Travel 10.7%、Class 9.0%、Inflight entertainment 5.5%。
+
 ---
 
 ## 快速开始
@@ -42,6 +51,7 @@ make smoke
 make data      # raw -> processed（清洗 + 校验和）
 make split     # 冻结划分 -> splits/fold_v1.json
 make train     # 5 折基线（约 32 秒）
+make p1        # P1 全部交付物：划分对比 / EDA 图 / 重要性 / 特征字典 / 事后特征实验
 ```
 
 单轮 5 折在 CPU 上 32 秒，不需要 GPU。

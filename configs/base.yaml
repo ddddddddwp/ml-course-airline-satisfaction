@@ -7,6 +7,7 @@ paths:
   processed_dir: data/processed
   splits: splits/fold_v1.json
   reports: reports
+  figures: reports/figures
   oof_dir: reports/oof
   exp_log: reports/exp_log.csv
 

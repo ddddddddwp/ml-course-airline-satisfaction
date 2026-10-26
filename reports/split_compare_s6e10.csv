@@ -1,0 +1,4 @@
+﻿strategy,n_splits,pos_mean,pos_std,fold_size_min,fold_size_max,cv_mean,cv_std
+kfold,5,0.443573,0.001462,139927,139927,0.95877,0.000289
+stratified,5,0.443573,3e-06,139927,139927,0.958829,0.000648
+group,5,0.443573,0.012103,139927,139927,0.957784,0.001055
