@@ -1,0 +1,50 @@
+project: s6e10-toy
+seed: 42
+
+# 冒烟测试专用：不碰 data/raw，不碰 splits/fold_v1.json
+paths:
+  raw_dir: data/toy/raw
+  interim_dir: data/toy/interim
+  processed_dir: data/toy/processed
+  splits: splits/toy_fold.json
+  reports: reports
+  oof_dir: reports/oof
+  exp_log: reports/exp_log_toy.csv
+
+data:
+  train_file: train.csv
+  test_file: test.csv
+  sample_sub_file: sample_submission.csv
+  target: satisfaction
+  id_col: id
+
+split:
+  strategy: stratified
+  n_splits: 5
+  seed: 42
+  time_col: null
+  group_col: distance_bins
+  group_bins: 50
+
+features:
+  service_cols: []
+  cat_cols: []
+  num_cols: []
+
+model:
+  lgbm:
+    n_estimators: 200
+    learning_rate: 0.08
+    num_leaves: 31
+    min_child_samples: 30
+    subsample: 0.9
+    subsample_freq: 1
+    colsample_bytree: 0.9
+    n_jobs: -1
+    verbose: -1
+  lr:
+    C: 1.0
+    max_iter: 200
+
+eval:
+  metric: roc_auc

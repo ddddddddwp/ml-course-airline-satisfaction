@@ -1,0 +1,21 @@
+# 数据不进 git（体积大且可重建）
+data/raw/*
+data/interim/
+data/processed/
+data/toy/
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+
+# 实验产物
+reports/oof/
+reports/figures/*.png
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.ipynb_checkpoints/
+
+# 系统
+.DS_Store
