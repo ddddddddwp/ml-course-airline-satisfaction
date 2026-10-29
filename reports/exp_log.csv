@@ -13,3 +13,9 @@ P1_feat_lr_C_1026_abl,2026-10-26,P1,feat,lr,C,v1,fcb43302,0.921643,0.000447,,bed
 P1_feat_lr_CT_1026_abl,2026-10-26,P1,feat,lr,C+T,v1,afe44ce2,0.9233,0.00049,,bed7b46,n_feat=25
 P1_feat_lr_ABCT_1026_abl,2026-10-26,P1,feat,lr,A+B+C+T,v1,ff1bacf8,0.945162,0.000589,,bed7b46,n_feat=49
 P1_feat_lgbm_CT-drop_1026_noarr,2026-10-26,P1,feat,lgbm,C+T-drop,v1,e50426c7,0.960157,0.000576,,8fc2479,"n_feat=23; drop=Arrival Delay in Minutes,arr_delay_missing"
+P2_feat_lgbm_base_1029,2026-10-29,P2,feat,lgbm,base,v1,2e76642b,0.958829,0.000648,,,n_feat=22
+P2_feat_lgbm_CT_1029_main,2026-10-29,P2,feat,lgbm,C+T,v1,77555718,0.960191,0.000583,,,n_feat=25
+P2_feat_lr_CT_1029_contrast,2026-10-29,P2,feat,lr,C+T,v1,afe44ce2,0.9233,0.00049,,,n_feat=25
+P2_feat_lgbm_CT_1029_sens_nl31,2026-10-29,P2,feat,lgbm,C+T,v1,0b92ddbb,0.959895,0.000592,,,超参敏感性 num_leaves=31（其余默认）
+P2_feat_lgbm_CT_1029_sens_nl63,2026-10-29,P2,feat,lgbm,C+T,v1,77555718,0.960191,0.000583,,,超参敏感性 num_leaves=63（其余默认）
+P2_feat_lgbm_CT_1029_sens_nl127,2026-10-29,P2,feat,lgbm,C+T,v1,452ec92d,0.960254,0.000593,,,超参敏感性 num_leaves=127（其余默认）
