@@ -3,9 +3,12 @@
 用 LGBM 在**全量训练集**上拟合一次取 gain 重要性。注意：
 这只能说明"模型怎么用特征"，不能替代消融——重要性高 ≠ 去掉会掉分。
 
-产出：
+产出（路径取自 --config 的 paths.figures / paths.reports）：
     reports/figures/fig_feat_importance.png
     reports/feature_importance.csv
+
+用法：
+    python scripts/plot_importance.py --config configs/base.yaml --groups base,C,T --top 20
 """
 
 from __future__ import annotations
@@ -19,7 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from src.common.config import ROOT, load_config, path_of
+from src.common.config import load_config, path_of
 from src.data.schema import detect_schema
 from src.features.build import prepare_X
 from src.features.encode import TargetEncoder
@@ -35,11 +38,16 @@ def main() -> None:
     ap.add_argument("--top", type=int, default=20)
     args = ap.parse_args()
 
+    if args.top < 1:
+        raise SystemExit("[imp] --top 必须是 >= 1 的整数")
     cfg = load_config(args.config)
     groups = [g.strip() for g in args.groups.split(",") if g.strip()]
 
     proc = path_of(cfg, "processed_dir")
-    df = pd.read_parquet(proc / "train.parquet")
+    tr_path = proc / "train.parquet"
+    if not tr_path.exists():
+        raise SystemExit(f"[imp] 找不到 {tr_path}，先跑 make data")
+    df = pd.read_parquet(tr_path)
     test = pd.read_parquet(proc / "test.parquet")
     schema = detect_schema(df, cfg, verbose=False)
     y = df[schema["target"]].to_numpy()
@@ -82,8 +90,8 @@ def main() -> None:
         .rename(columns={"index": "feature"})
     )
     total = imp["gain"].sum()
-    imp["share"] = imp["gain"] / total
-    out_csv = ROOT / cfg["paths"]["reports"] / "feature_importance.csv"
+    imp["share"] = imp["gain"] / total if total else 0.0
+    out_csv = path_of(cfg, "reports") / "feature_importance.csv"
     imp.to_csv(out_csv, index=False, encoding="utf-8-sig")
 
     top = imp.head(args.top).iloc[::-1]
@@ -94,8 +102,7 @@ def main() -> None:
     ax.set_xlabel("share of total gain (%)")
     ax.set_title(f"Feature importance (LightGBM gain), top {len(top)}")
     fig.tight_layout()
-    png = ROOT / "reports/figures/fig_feat_importance.png"
-    png.parent.mkdir(parents=True, exist_ok=True)
+    png = path_of(cfg, "figures") / "fig_feat_importance.png"
     fig.savefig(png, bbox_inches="tight")
     plt.close(fig)
 

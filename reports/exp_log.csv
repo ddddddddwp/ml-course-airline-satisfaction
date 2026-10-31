@@ -19,3 +19,11 @@ P2_feat_lr_CT_1029_contrast,2026-10-29,P2,feat,lr,C+T,v1,afe44ce2,0.9233,0.00049
 P2_feat_lgbm_CT_1029_sens_nl31,2026-10-29,P2,feat,lgbm,C+T,v1,0b92ddbb,0.959895,0.000592,,,超参敏感性 num_leaves=31（其余默认）
 P2_feat_lgbm_CT_1029_sens_nl63,2026-10-29,P2,feat,lgbm,C+T,v1,77555718,0.960191,0.000583,,,超参敏感性 num_leaves=63（其余默认）
 P2_feat_lgbm_CT_1029_sens_nl127,2026-10-29,P2,feat,lgbm,C+T,v1,452ec92d,0.960254,0.000593,,,超参敏感性 num_leaves=127（其余默认）
+P3_eval_lgbm_CT_1031_s42_stab,2026-10-31,P3,eval,lgbm,C+T,v1,77555718,0.960191,0.000583,,59e8ada,P3 稳定性 seed=42
+P3_eval_lgbm_CT_1031_s2026_stab,2026-10-31,P3,eval,lgbm,C+T,v1,0f37c90a,0.960159,0.00065,,59e8ada,P3 稳定性 seed=2026
+P3_eval_lgbm_CT_1031_s7_stab,2026-10-31,P3,eval,lgbm,C+T,v1,5657e314,0.960203,0.00066,,59e8ada,P3 稳定性 seed=7
+P2_final_lgbm_CT_1031_s42_final,2026-10-31,P2,final,lgbm,C+T,v1,77555718,0.960191,0.000583,,59e8ada,n_feat=25; 5 折测试集平均预测; seed=42; tag=final
+P1_feat_lgbm_B_1031_s42_abl2,2026-10-31,P1,feat,lgbm,B,v1,8270886e,0.95865,0.000657,,59e8ada,n_feat=46
+P1_feat_lgbm_ABCT_1031_s42_abl2,2026-10-31,P1,feat,lgbm,A+B+C+T,v1,e4527dee,0.960048,0.00061,,59e8ada,n_feat=49
+P1_feat_lr_B_1031_s42_abl2,2026-10-31,P1,feat,lr,B,v1,0d1b0e27,0.943866,0.000527,,59e8ada,n_feat=46
+P1_feat_lr_ABCT_1031_s42_abl2,2026-10-31,P1,feat,lr,A+B+C+T,v1,ff1bacf8,0.945162,0.00059,,59e8ada,n_feat=49

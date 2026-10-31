@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "stamped_at": "2026-10-31T10:53:54+08:00",
+  "fold_file": "fold_v1.json",
+  "fold_file_sha256": "2dd2e70f5d67d55d671afba60d09d4c2d679e72523f18cf8d8a07d077d8c5d99",
+  "n_rows": 699635,
+  "n_splits": 5,
+  "strategy": "stratified",
+  "data_fingerprint": {
+    "train.parquet": "ae6e422e84bfa342ede1e1eee6b33209afa91222647329e3fc2b29e63fc3222f",
+    "test.parquet": "9bf96e7b5aea93e76d1cca7706e6963a7dcfc31e6f7722b1181fb9f0844bdf60"
+  },
+  "code_version": "59e8ada-dirty"
+}

@@ -3,12 +3,17 @@
 做法：真的把特征矩阵跑一遍，把 X 里出现的每一列都写进表里。
 这样"全覆盖"是**构造保证**的，不是靠人肉数。
 
-产出：docs/feature-dictionary.md
+产出：docs/feature-dictionary.md（--out 可改；相对路径按仓库根解析）
+
+用法：
+    python scripts/gen_feature_dict.py --config configs/base.yaml
+    python scripts/gen_feature_dict.py --out docs/feature-dictionary.md
 """
 
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 import pandas as pd
 
@@ -85,7 +90,10 @@ def main() -> None:
 
     cfg = load_config(args.config)
     proc = path_of(cfg, "processed_dir")
-    df = pd.read_parquet(proc / "train.parquet")
+    tr_path = proc / "train.parquet"
+    if not tr_path.exists():
+        raise SystemExit(f"[dict] 找不到 {tr_path}，先跑 make data")
+    df = pd.read_parquet(tr_path)
     test = pd.read_parquet(proc / "test.parquet")
     schema = detect_schema(df, cfg, verbose=False)
 
@@ -146,7 +154,9 @@ def main() -> None:
         "",
     ]
 
-    out = ROOT / args.out
+    out = Path(args.out)
+    if not out.is_absolute():
+        out = ROOT / out
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(lines), encoding="utf-8")
 

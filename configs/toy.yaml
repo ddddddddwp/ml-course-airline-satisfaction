@@ -49,3 +49,7 @@ model:
 
 eval:
   metric: roc_auc
+
+# 合成数据用：不设契约，scripts/verify.py 会跳过 dataset-specific 检查。
+# （合成数据形状随 --train/--test 变，写死契约只会制造假 FAIL。）
+contract: null

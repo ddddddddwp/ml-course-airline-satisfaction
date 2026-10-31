@@ -9,7 +9,7 @@ data/external/
 # 实验产物
 reports/oof/
 reports/*toy*
-splits/toy_fold.json
+splits/toy_fold*.json
 
 # Python
 __pycache__/
@@ -17,6 +17,17 @@ __pycache__/
 .venv/
 .ipynb_checkpoints/
 .idea/
+
+# 本机环境 / 缓存 / 临时文件（可重建，不入库）
+.deps/
+.tmp/
+.pip-cache/
+
+# 评估与实验产物（可重建）
+reports/eval/
+data/*/CHECKSUMS.local.txt
+*.log
+splits/*.bak.*
 
 # 系统
 .DS_Store

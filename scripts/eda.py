@@ -1,12 +1,12 @@
 """EDA 四张图（P1-03 / P1-21）。
 
-产出 reports/figures/：
+产出 cfg paths.figures（默认 reports/figures/）：
   fig1_label_dist.png      目标分布
   fig2_data_quality.png    缺失率 / 每行 0 值个数 / 各评分列 0 值占比
   fig3_delay_dist.png      延误长尾（原始 vs log1p）
   fig4_rating_vs_target.png 评分-满意率曲线（0 = 不适用 的核心证据）
 
-用法：
+用法（运行前确保 src 可导入，make 会自动 export PYTHONPATH=.）：
     python scripts/eda.py                 # 用 configs/base.yaml
     python scripts/eda.py --config configs/toy.yaml
 """
@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from src.common.config import ROOT, load_config, path_of
+from src.common.config import load_config, path_of
 from src.data.schema import detect_schema
 
 plt.rcParams.update({
@@ -55,13 +55,15 @@ def main() -> None:
     args = ap.parse_args()
 
     cfg = load_config(args.config)
-    df = pd.read_parquet(path_of(cfg, "processed_dir") / "train.parquet")
+    tr_path = path_of(cfg, "processed_dir") / "train.parquet"
+    if not tr_path.exists():
+        raise SystemExit(f"[eda] 找不到 {tr_path}，先跑 make data")
+    df = pd.read_parquet(tr_path)
     schema = detect_schema(df, cfg, verbose=False)
     y = df[schema["target"]].to_numpy()
     svc = [c for c in schema["service_cols"] if c in df.columns]
 
-    fig_dir = ROOT / cfg["paths"]["figures"] if "figures" in cfg["paths"] else ROOT / "reports/figures"
-    fig_dir.mkdir(parents=True, exist_ok=True)
+    fig_dir = path_of(cfg, "figures")
     print(f"[eda] {len(df):,} 行 × {df.shape[1]} 列 -> {fig_dir}")
 
     # ---------- fig1 标签分布

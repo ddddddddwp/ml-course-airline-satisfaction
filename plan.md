@@ -12,7 +12,7 @@
 | 题目 | Kaggle Playground S6E10 — Predicting Airline Satisfaction |
 | 任务 / 指标 | 二分类 / ROC AUC（提交概率，禁止阈值化） |
 | 数据 | train 699,635 × 23，test 299,844 × 22，正例 44.36% |
-| 当前最好 | **OOF AUC 0.96019**（LightGBM + base+C+T） |
+| 当前最好 | **OOF AUC 0.960191**（LightGBM + base+C+T，`P2_final_lgbm_CT_1031_s42_final`）；日志单点最高 0.960254（nl127，seed 噪声内，不算“当前最好”） |
 | 公开领先 | 0.9642（5800 人参赛，天花板已被卷平） |
 | 尺子 | `splits/fold_v1.json`（stratified, 5 折, seed 42）已冻结 |
 | 交付 | 1 份答辩 PPT + 3 份独立报告（双面打印）+ 1 个可复现仓库 |
@@ -37,13 +37,13 @@
 
 ## 3. 里程碑
 
-| # | 截止 | 标志 | 验收标准 | 负责人 |
-|---|---|---|---|---|
-| **M0** 启动 | W1-D1（10/26） | 五项冻结 | 题目 / 指标 / 尺子 / 数据 / 技术栈均已确定并入库 | 全员 |
-| **M1** 基线打通 | W1-D5（11/1） | 三人跑出同一分数 | 各自 `make train`，OOF AUC 一致到 **1e-6**；`exp_log` 有记录 | P2 组织 |
-| **M2** 做出增量 | W2-D5（11/8） | 每人有对照实验 | 每人 ≥1 组对照 + ≥1 张图 + ≥1 条可量化结论 | 各自 |
-| **M3** 初稿齐 | W3-D5（11/15） | 报告 + PPT 初稿 | 三份报告初稿齐、PPT 初稿、每人能脱稿答 5 问 | P2 统稿 |
-| **M4** 交付 | W4（11/22） | 可答辩 | 双面打印装订、PPT 双格式、预答辩彩排 2 遍 | P3 对接 |
+| # | 截止 | 标志 | 验收标准 | 负责人 | 状态 |
+|---|---|---|---|---|---|
+| **M0** 启动 | W1-D1（10/26） | 五项冻结 | 题目 / 指标 / 尺子 / 数据 / 技术栈均已确定并入库 | 全员 | ✅ 完成 |
+| **M1** 基线打通 | W1-D5（11/1） | 三人跑出同一分数 | 各自 `make train`，OOF AUC 一致到 **1e-6**；`exp_log` 有记录 | P2 组织 | ✅ 完成（base 0.958829，P1/P2 逐位一致；P3 已独立复评） |
+| **M2** 做出增量 | W2-D5（11/8） | 每人有对照实验 | 每人 ≥1 组对照 + ≥1 张图 + ≥1 条可量化结论 | 各自 | ✅ 完成（消融 / 调参 / P3 评估、稳定性、SHAP、badcase） |
+| **M3** 初稿齐 | W3-D5（11/15） | 报告 + PPT 初稿 | 三份报告初稿齐、PPT 初稿、每人能脱稿答 5 问 | P2 统稿 | ✅ 完成（P1/P2/P3 三份报告齐） |
+| **M4** 交付 | W4（11/22） | 可答辩 | 双面打印装订、PPT 双格式、预答辩彩排 2 遍 | P3 对接 | 🟡 进行中（仅剩打印 / 彩排 / 双格式导出） |
 
 ---
 
@@ -63,10 +63,10 @@
 | 模型候选清单 + 训练骨架 | P2 | ✅ 完成（清单写入报告；骨架沿用 `run_cv` 契约，未重写） |
 | baseline 5 折 + 与 P3 交叉校验 | P2 | ✅ 完成（P2_feat_lgbm_base_1029=0.958829，与 P1 逐位一致） |
 | 主力模型 v1 | P2 | ✅ 完成（P2_feat_lgbm_CT_1029_main=0.960191） |
-| 评估框架 + metric 单测 | P3 | ⬜ 未开始 |
-| CV 评估循环（读 `fold_v1.json`） | P3 | ⬜ 未开始 |
-| 独立复现 baseline | P3 | ⬜ 未开始 |
-| 误差分析模板 | P3 | ⬜ 未开始 |
+| 评估框架 + metric 单测 | P3 | ✅ 完成（`src/eval/metrics.py` + `tests/test_metrics.py`） |
+| CV 评估循环（读 `fold_v1.json`） | P3 | ✅ 完成（`src/eval/evaluate.py`） |
+| 独立复现 baseline | P3 | ✅ 完成（base 0.958829，与 P1/P2 一致） |
+| 误差分析模板 | P3 | ✅ 完成（`src/eval/badcase.py` + `reports/eval/badcase_summary.md`） |
 
 ### W2（11/2–11/8）· 做出增量
 
@@ -74,20 +74,20 @@
 |---|---|---|
 | 消融：2 模型族 × 6 特征组 | P1 | ✅ 已提前完成 |
 | 特征重要性 + 图 | P1 | ✅ 已完成 |
-| 多 seed 显著性（3 seeds × 5 folds） | P1 + P3 | ⬜ 待做 |
-| 提交路径（train → test 概率 → submission） | P1 定规则 / P2 实现 | ⬜ 待做 |
-| Optuna 调参 | P2 | ✅ 完成（改轻量敏感性：num_leaves 31/63/127，见 §8 风险预案；run_id P2_feat_lgbm_CT_1029_sens_nl*） |
-| 对照模型 A / B + 对比总表 | P2 | ✅ 完成（LR 对照 P2_feat_lr_CT_1029_contrast=0.92330 + 对比表） |
-| 集成 / 后处理 | P2 | ⏭ 跳过（§8 风险预案：天花板已卷平，单模 0.96019 边际收益<0.001） |
-| SHAP 全局图（采样 1–2 万行） | P3 | ⬜ 未开始 |
-| badcase top-50 归类 | P3 | ⬜ 未开始 |
-| 稳定性实验（3 seeds × 5 folds） | P3 | ⬜ 未开始 |
+| 多 seed 显著性（3 seeds × 5 folds） | P1 + P3 | ✅ 完成（42/2026/7，均值 0.960184，seed std 0.000023） |
+| 提交路径（train → test 概率 → submission） | P1 定规则 / P2 实现 | ✅ 完成（`predict_test()` → `submission_final.csv` 299,844 行概率，`stage=final` 登记） |
+| Optuna 调参 | P2 | ⏭ 改为轻量敏感性（未做 Optuna；num_leaves 31/63/127，见 §8 风险预案；run_id P2_feat_lgbm_CT_1029_sens_nl*） |
+| 对照模型 A / B + 对比总表 | P2 | ✅ 完成（LR 对照 P2_feat_lr_CT_1029_contrast=0.923300 + 对比表） |
+| 集成 / 后处理 | P2 | ⏭ 跳过（§8 风险预案：天花板已卷平，单模 0.960191 边际收益<0.001） |
+| SHAP 全局图（采样 1–2 万行） | P3 | ✅ 完成（OOF-TE，20,000 行采样） |
+| badcase top-50 归类 | P3 | ✅ 完成（错误率 7.36%，Online boarding=4 最高 12.0%） |
+| 稳定性实验（3 seeds × 5 folds） | P3 | ✅ 完成（`reports/eval/stability.json`） |
 
 ### W3（11/9–11/15）· 收口 + 初稿
 
-P1：消融结论定稿 → 数据章节 + 特征章节成稿
+P1：消融结论定稿 → 数据章节 + 特征章节成稿 ✅（`reports/p1_data_report.md`）
 P2：最终模型 + `submission_final` ✅ → 模型章节 + 实验设置章节 ✅（`reports/p2_model_report.md` + 4 张必备图）
-P3：最终评估 + `make all` → 评估协议章节 + 误差分析章节 + README 复现说明
+P3：最终评估 + `make all` ✅ → 评估协议章节 + 误差分析章节 + README 复现说明 ✅（`reports/p3_eval_report.md`，`make all` 已可重复执行）
 
 ### W4（11/16–11/22）· 材料与答辩
 
@@ -103,7 +103,7 @@ D18 主讲彩排 2 遍 → D19 双面打印装订 → 答辩。
 | **H1** | `splits/fold_v1.json` | P1 → 全员 | ✅ 已交付 | 所有实验作废 |
 | **H2** | 主力模型调用接口 | P2 → P1、P3 | ✅ 已交付（`src/models/predict.py`：`train_final()`/`predict_test()`） | 已解卡 |
 | **H3** | 最终模型 + submission | P2 → P3 | ✅ 已交付（`reports/submission_final.csv` 299,844 行概率） | 已解卡 |
-| **H4** | 三份章节稿 | 全员 → P2 | ⬜ | PPT 无法统稿 |
+| **H4** | 三份章节稿 | 全员 → P2 | ✅ 已交付（P1 / P2 / P3 三份报告齐） | PPT 已可统稿 |
 
 `H1 → H2 → 多 seed 实验 → H3 → 最终评估 → H4 → PPT`
 
@@ -126,7 +126,7 @@ git push -u origin p2/optuna     # 开 PR，至少 1 人 review
 
 | | 数据 `data/raw/` | 尺子 `splits/fold_v1.json` |
 |---|---|---|
-| 在 git 里 | ✅ 已提交（92 MB） | ✅ 已提交（2.1 MB） |
+| 在 git 里 | ✅ 已提交（91.70 MiB） | ✅ 已提交（2.00 MiB） |
 | 可再生 | ✅ 重新下载 + `make data` | ❌ **不可再生** |
 | 规则 | 只读，替换前先在群里说 | 冻结后只读，改 = 全组历史作废 |
 
@@ -142,6 +142,17 @@ run_id,date,owner,stage,model,feat_ver,split_ver,params_hash,cv_mean,cv_std,publ
 
 **铁律**：报告里出现的每个数字，必须能按 `run_id` 查到、按 `git_commit` 复现。
 
+`run_id` 统一格式：
+
+```
+{owner}_{stage}_{model}_{feat}_{MMDD}_s{seed}[_{tag}]
+```
+
+- 例：`P1_feat_lgbm_base_1026_s42_abl`、`P2_final_lgbm_CT_1031_s42_final`、`P3_eval_lgbm_CT_1031_s2026_stab`。
+- **seed 必须进 id**：否则不同 seed 的 OOF 同名互相覆盖，历史实验无法回溯（旧的 `P2_..._1029` 行是加 seed 前的历史记录，保留不动）。
+- `train` 的 CV 行与 `predict` 的最终交付行都登记：`predict` 写 `stage=final`，同时落 `reports/oof/{run_id}.parquet`，并保留兼容路径 `reports/oof/P2_final_oof.parquet`。
+- `git_commit` 优先取 `GIT_COMMIT` 环境变量（CI / 无 `.git`），取不到再问 `git`，都取不到写 `unknown`（空串会被误认为漏填）。
+
 ### 6.4 五条硬约定
 
 1. 所有实验必须 `load_folds()` 取折，**禁止自己 `train_test_split`**
@@ -156,11 +167,11 @@ run_id,date,owner,stage,model,feat_ver,split_ver,params_hash,cv_mean,cv_std,publ
 
 ### 7.1 报告章节归属（不重叠）
 
-| 成员 | 核心章节 | 必备图表 |
-|---|---|---|
-| P1 | 数据描述、EDA、划分论证、特征设计与消融 | 标签分布、数据质量、评分–满意率、重要性、消融表 |
-| P2 | 模型原理、损失与正则、调参、对比、集成 | 结构图、学习曲线、模型对比表、超参敏感性 |
-| P3 | 评估协议、稳定性、误差分析、可解释性 | 混淆矩阵/残差、badcase、SHAP、seed 方差 |
+| 成员 | 核心章节 | 必备图表 | 状态 |
+|---|---|---|---|
+| P1 | 数据描述、EDA、划分论证、特征设计与消融 | 标签分布、数据质量、评分–满意率、重要性、消融表 | ✅ 已交稿（`reports/p1_data_report.md`） |
+| P2 | 模型原理、损失与正则、调参、对比、集成 | 结构图、学习曲线、模型对比表、超参敏感性 | ✅ 已交稿（`reports/p2_model_report.md`） |
+| P3 | 评估协议、稳定性、误差分析、可解释性 | 混淆矩阵/残差、badcase、SHAP、seed 方差 | ✅ 已完成（`reports/p3_eval_report.md`） |
 
 **防雷同**：背景与数据各自重写；共用数字口径统一；首页写明"本人负责部分"。
 
@@ -194,11 +205,12 @@ run_id,date,owner,stage,model,feat_ver,split_ver,params_hash,cv_mean,cv_std,publ
 
 ## 8. 风险与砍任务顺序
 
-| 风险 | 触发信号 | 预案 |
+| 风险 | 触发信号 | 预案 / 当前状态 |
 |---|---|---|
-| 模型涨不上去 | M2 时最好成绩 ≈ 0.960 | 转"复现 + 分析"型：重点写消融、误差、可解释性 |
+| 模型涨不上去 | M2 时最好成绩 ≈ 0.960 | **已触发，已按预案转“复现 + 分析”型**：重点写消融、误差、可解释性；主模型锁定 0.960191，不做集成冲刺 |
 | 某人掉链子 | 连续 2 天无 run 记录 | 组长 24h 内重分配 |
 | 数据泄漏 | CV 远高于 LB | 回 `fold_v1.json` 复核，不要硬解释 |
+| 数据/划分被误改 | CHECKSUMS 不一致 / fold 指纹变化 | **已机制化**：`make data` 校验和闸门（只有 `--accept-data-change` 才更新）；`freeze` 已存在默认跳过、`--force` 先备份；`verify` 重算哈希并校验 `fold_v1.fingerprint.json` |
 | 时间不够 | 距答辩 < 5 天且集成未做 | 按下表砍 |
 | 打印出问题 | 答辩前 1 天 | 提前 2 天打印，PDF 双备份 |
 
