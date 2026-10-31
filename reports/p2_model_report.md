@@ -204,6 +204,7 @@ bootstrap 95% CI 半宽 0.00045，不能据此把“当前最好”改成 0.9602
 | 学习曲线 | `figures/p2_learning_curve.png` + §3.2 | 过拟合受控证据 |
 | 超参敏感性 | `figures/p2_sensitivity.png` + §3.3 | 默认近最优 |
 | 结构图 | `figures/p2_structure.png` + §1.2 | LightGBM 工作机制 |
+| 答辩 PPT | `reports/airline_satisfaction_ppt.pptx` + `scripts/make_ppt.py` | 12 页 / 16:9 / 可编辑 / 300 dpi / 逐页备注；PDF 打印待完成 |
 | 实验记录 | `reports/exp_log.csv`（P2_* 行） | 每个数字可溯源 |
 
 **P2 必答 5 问**：见 `docs/verify.md` 与 `plan.md` 7.3；核心结论已含于本节 §1.1（选型）、§2（损失与正则）、§3.2（防过拟合）、§3.3（调参空间）、§5（集成取舍）。

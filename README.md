@@ -121,6 +121,16 @@ python -m src.eval.badcase --config configs/base.yaml
 
 单轮 5 折在 CPU 上约 32 秒，不需要 GPU；3 seeds × 5 折约 2–3 分钟。
 
+### 答辩 PPT
+
+```powershell
+$env:PYTHONPATH="."
+python scripts/make_ppt.py     # 需 requirements-dev 中的 python-pptx
+```
+
+输出 `reports/airline_satisfaction_ppt.pptx`：12 页、16:9、可编辑文本/表格、300 dpi 图、逐页演讲备注。
+PDF 可在 PowerPoint 中另存为/打印；当前仓库未提交 PDF 文件。
+
 ### 没有数据也能先跑通链路
 
 ```bash
@@ -182,6 +192,7 @@ python -m src.models.train --config configs/base.yaml --model lgbm --groups base
 
 ```
 ├── plan.md                  # 唯一计划文件：里程碑 / 分工 / 协作规范
+├── CHANGELOG.md             # 本轮修复与答辩材料记录
 ├── Makefile                 # 所有入口：data / split / train / abl / p1 / p3 / verify
 ├── LICENSE                  # MIT
 ├── pyproject.toml           # 包元数据 + pytest / ruff 配置
@@ -212,6 +223,7 @@ python -m src.models.train --config configs/base.yaml --model lgbm --groups base
 │   ├── gen_feature_dict.py  # 生成特征字典
 │   ├── verify.py            # 33 项材料验收
 │   ├── clean.py             # 跨平台清理派生数据
+│   ├── make_ppt.py          # 生成 12 页答辩 PPT（python-pptx）
 │   └── make_toy_data.py     # 合成数据（冒烟测试用）
 ├── tests/                   # 119 项 pytest（数据/特征/划分/评估/预测）
 ├── reports/
@@ -219,6 +231,7 @@ python -m src.models.train --config configs/base.yaml --model lgbm --groups base
 │   ├── p1_data_report.md    # P1 报告
 │   ├── p2_model_report.md   # P2 报告
 │   ├── p3_eval_report.md    # P3 报告
+│   ├── airline_satisfaction_ppt.pptx  # 12 页答辩 PPT（可编辑 + 演讲备注）
 │   ├── figures/             # 报告用图（300 dpi）
 │   ├── eval/                # P3 评估产物（metrics.json / stability.json / SHAP / badcase）
 │   └── oof/                 # OOF 预测（不进 git，可重建）
@@ -280,7 +293,7 @@ for tr, va in folds:
 | M1 基线打通（三人分数一致到 1e-6） | ✅ 完成（base 0.958829，P1/P2 逐位一致，P3 已独立复评） |
 | M2 做出增量 | ✅ 完成（消融 / 调参敏感性 / P3 评估与稳定性 / SHAP / badcase） |
 | M3 初稿齐 | ✅ 完成（三份报告初稿齐：P1 / P2 / P3） |
-| M4 交付 | 🟡 进行中（仅剩 PPT 双格式导出、打印装订与彩排） |
+| M4 交付 | 🟡 进行中（PPTX 已生成：12 页 / 9pt / 300dpi；仅剩 PDF 导出、打印装订与彩排） |
 
 关键交接：
 
@@ -292,3 +305,5 @@ for tr, va in folds:
 | H4 | 三份章节稿 | ✅ 已交付（`reports/p1_data_report.md` / `p2_model_report.md` / `p3_eval_report.md`） |
 
 验收材料：`python scripts/verify.py --config configs/base.yaml`（**33 项**，当前 33/33 通过、0 SKIP）+ `--reproduce`（另加 1 项重跑复现，合计 **34 项**）；另有 `python -m pytest -q`（**119 passed**）。详见 [`docs/verify.md`](docs/verify.md)。
+
+答辩材料：[`reports/airline_satisfaction_ppt.pptx`](reports/airline_satisfaction_ppt.pptx)（12 页、16:9、可编辑、逐页备注；生成脚本 [`scripts/make_ppt.py`](scripts/make_ppt.py)）。PDF 导出、双面打印与彩排仍待完成。

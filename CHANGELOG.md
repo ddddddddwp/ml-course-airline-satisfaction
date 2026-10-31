@@ -63,7 +63,16 @@ seed std 0.000023，平均折内 std 0.000631）。
 - 若你的 clone 仍是 CRLF：`git add --renormalize data/raw && git checkout -- data/raw`；
   不迁移也不影响 `make data` / `verify`，哈希会归一化。
 
-### 6. 验收
+### 6. 答辩 PPT（2026-10-31）
+
+- 新增 `reports/airline_satisfaction_ppt.pptx`：**12 页、16:9、可编辑文本/表格、300 dpi 图、逐页演讲备注**；
+  全篇最小字号 **9.0 pt**。
+- 新增生成脚本 `scripts/make_ppt.py`（python-pptx）；`requirements-dev.txt` 增加 `python-pptx>=1.0`。
+- 结构检查：12 页、9 张图、5 个表格、12 页备注齐全；文本溢出启发式检查 0 处。
+- **未完成**：PDF 导出、双面打印、预答辩彩排。当前机器的 LibreOffice Kit 渲染器即使打开最小 PPTX 也会崩溃
+  （`0xC0000005`），因此未生成 PDF/预览图；请在 PowerPoint 中打开检查后另存 PDF 再打印。
+
+### 7. 验收
 
 ```text
 python -m pytest -q                                      # 119 passed
@@ -72,4 +81,4 @@ python scripts/verify.py --config configs/base.yaml --reproduce  # 34/34，base 
 ```
 
 未做/保留：不做模型集成（按 plan §8 风险预案与交接说明）；3 seeds 只是方差估计，不是正式显著性检验；
-数据为公开镜像，没有官方 Public LB 提交记录。
+数据为公开镜像，没有官方 Public LB 提交记录。答辩材料中 PPTX 已生成，PDF/双面打印/彩排仍待完成。

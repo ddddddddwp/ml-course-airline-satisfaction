@@ -226,7 +226,7 @@ def add_slide2(prs):
         y += 1.55
 
     # right panel
-    card(s, 8.05, 1.62, 4.66, 4.95, LIGHT, BORDER, TEAL)
+    card(s, 8.05, 1.62, 4.66, 4.82, LIGHT, BORDER, TEAL)
     text(s, 8.32, 1.82, 4.1, 0.3, "核心问题", 11, True, TEAL)
     rich(s, 8.32, 2.18, 4.1, 1.25, [
         {"text": "哪些服务环节真正驱动满意度？", "size": 15, "bold": True, "color": NAVY, "space_after": 8, "line": 1.2},
@@ -316,7 +316,7 @@ def add_slide4(prs):
     text(s, M, 1.55, 4.7, 0.3, "特征组（全开 49 列）", 11, True, TEAL)
     data = [
         ["组", "内容", "列数", "用标签"],
-        ["base", "原始 21 特征 + 缺失标记", "22", "否"],
+        ["base", "原始 21 特征 + arr_delay_missing", "22", "否"],
         ["A", "0→NaN + is_zero", "13", "否"],
         ["B", "聚合 / 交互（隐含 A）", "11", "否"],
         ["C", "Flight Distance / Age 频次", "2", "否"],
@@ -342,7 +342,7 @@ def add_slide4(prs):
               highlight_rows={5}, highlight_fill=TEAL_LIGHT)
 
     # insight cards
-    yy, hh = 5.75, 0.92
+    yy, hh = 5.72, 1.0
     cards = [
         ("树模型", "A/B 零增益或负增益", "聚合量是原始列的确定性函数，树自己能学；多列反而稀释采样。", TEAL),
         ("线性模型", "A/B +0.019 ~ +0.022", "0 的非单调语义线性模型表达不了；is_zero 标记把它救回来。", AMBER),
@@ -351,14 +351,14 @@ def add_slide4(prs):
     x = M
     for tag, big, small, color in cards:
         card(s, x, yy, 3.92, hh, WHITE, BORDER, color)
-        text(s, x + 0.18, yy + 0.12, 1.6, 0.25, tag, 9.5, True, color)
-        text(s, x + 0.18, yy + 0.36, 3.55, 0.28, big, 12.5, True, NAVY)
-        text(s, x + 0.18, yy + 0.66, 3.55, 0.22, small, 8.8, False, SLATE)
+        text(s, x + 0.18, yy + 0.1, 1.6, 0.25, tag, 9.5, True, color)
+        text(s, x + 0.18, yy + 0.33, 3.55, 0.28, big, 12.5, True, NAVY)
+        text(s, x + 0.18, yy + 0.62, 3.55, 0.34, small, 9.0, False, SLATE, line=1.15)
         x += 4.08
 
-    text(s, M, 6.78, CW, 0.24,
+    text(s, M, 6.82, CW, 0.22,
          "注：B 组 dist_bin 已改为全量固定边界后重跑（run_id 以 _abl2 结尾）；主模型 base+C+T 不含 B，主分数不变。",
-         8.6, False, MUTED)
+         9.0, False, MUTED)
     notes(s, "先讲五组特征和列数账本：base 22、A 13、B 11、C 2、T 1，全开 49。"
              "消融表是核心：同一组 A/B 对 LightGBM 是 0 或负，对 LR 是 +0.019~+0.022；"
              "树模型唯一稳定增量是 C+T +0.0014，而且全加 49 列 0.960048 反而不如精选 25 列 0.960191。"
@@ -373,19 +373,19 @@ def add_slide5(prs):
     # score comparison
     card(s, M, 1.58, 5.65, 1.95, WHITE, BORDER, TEAL)
     text(s, M + 0.25, 1.72, 2.0, 0.28, "LightGBM", 11, True, TEAL)
-    text(s, M + 0.25, 2.02, 2.4, 0.62, "0.9602", 34, True, NAVY)
-    text(s, M + 0.25, 2.66, 2.5, 0.28, "OOF AUC · base+C+T", 9.5, False, MUTED)
+    text(s, M + 0.25, 2.0, 2.4, 0.7, "0.9602", 34, True, NAVY)
+    text(s, M + 0.25, 2.72, 2.5, 0.28, "OOF AUC · base+C+T", 9.5, False, MUTED)
     rect(s, M + 2.92, 1.75, 0.008, 1.55, BORDER)
     text(s, M + 3.18, 1.72, 2.2, 0.28, "LogisticRegression", 11, True, AMBER)
-    text(s, M + 3.18, 2.02, 2.3, 0.62, "0.9233", 34, True, NAVY)
-    text(s, M + 3.18, 2.66, 2.4, 0.28, "OOF AUC · 同折同特征", 9.5, False, MUTED)
+    text(s, M + 3.18, 2.0, 2.3, 0.7, "0.9233", 34, True, NAVY)
+    text(s, M + 3.18, 2.72, 2.4, 0.28, "OOF AUC · 同折同特征", 9.5, False, MUTED)
     text(s, M + 0.25, 3.08, 5.1, 0.3, "Δ = +0.0369，线性模型表达不了高阶交互", 10.5, True, RED)
 
     # reasons
     bullets = [
         ("非线性与交互", "舱位 × 旅程类型 × 延误的耦合，GBDT 天然拟合。"),
         ("类别特征友好", "直接处理 category，不用大规模 One-Hot。"),
-        ("概率校准好", "Logloss 目标输出校准概率，满足“提交概率”。"),
+        ("概率校准好", "Logloss 目标输出良好校准的概率，满足“提交概率”。"),
     ]
     yy = 3.62
     for i, (h, b) in enumerate(bullets, 1):
@@ -463,20 +463,20 @@ def add_slide7(prs):
     for num, label, color in kpis:
         card(s, x, 1.52, 2.92, 1.05, WHITE, BORDER)
         text(s, x + 0.15, 1.6, 2.6, 0.42, num, 21, True, color)
-        text(s, x + 0.15, 2.04, 2.6, 0.25, label, 8.8, False, MUTED)
+        text(s, x + 0.15, 2.04, 2.6, 0.25, label, 9.0, False, MUTED)
         x += 3.05
 
     pic(s, FIG / "p3_calibration.png", M, 2.82, 3.85, 3.05, border=True)
-    text(s, M, 5.92, 3.85, 0.27, "校准：预测概率 vs 实际频率", 8.8, False, MUTED, PP_ALIGN.CENTER)
+    text(s, M, 5.92, 3.85, 0.27, "校准：预测概率 vs 实际频率", 9.0, False, MUTED, PP_ALIGN.CENTER)
     pic(s, FIG / "p3_confusion.png", 4.65, 2.82, 2.95, 3.05, border=True)
-    text(s, 4.65, 5.92, 2.95, 0.27, "混淆矩阵 @ 0.5（仅描述）", 8.8, False, MUTED, PP_ALIGN.CENTER)
+    text(s, 4.65, 5.92, 2.95, 0.27, "混淆矩阵 @ 0.5（仅描述）", 9.0, False, MUTED, PP_ALIGN.CENTER)
 
     # right bullets
     card(s, 7.95, 2.8, 4.75, 3.35, LIGHT, BORDER, TEAL)
     text(s, 8.15, 2.95, 4.3, 0.28, "怎么读这组数", 10.5, True, TEAL)
     rows = [
         ("95% CI", "[0.959715, 0.960605]"),
-        ("阈值 0.5", "Acc 0.9264 · P 0.9272 · R 0.9051"),
+        ("阈值 0.5", "Prec 0.9272 · Rec 0.9051"),
         ("F1", "0.9160"),
         ("提交", "299,844 行概率，无 NaN"),
     ]
@@ -488,6 +488,9 @@ def add_slide7(prs):
     text(s, 8.15, 5.2, 4.35, 0.75,
          "AUC 是排序指标；阈值指标只说明 0.5 下的行为。\nECE 0.25% → 概率可直接提交。",
          9.2, False, SLATE, line=1.3)
+    text(s, M, 6.45, CW, 0.24,
+         "最终交付 run_id=P2_final_lgbm_CT_1031_s42_final ｜ 5 折测试集平均 ｜ 299,844 行概率",
+         9.0, False, MUTED)
     notes(s, "主结果：5 折均值 0.960191，pooled OOF 0.960186，两者只是算法口径不同；"
              "bootstrap 95% CI 0.959715–0.960605。概率质量：LogLoss 0.2255、Brier 0.0604、ECE 0.0025，"
              "校准很好，不需要 Platt/isotonic。阈值 0.5 下的 Acc/Precision/Recall 只作描述，不用于选模。"
@@ -512,11 +515,11 @@ def add_slide8(prs):
         x += 4.08
 
     pic(s, FIG / "p3_seed_variance.png", M, 2.72, 7.35, 2.95, border=True)
-    text(s, M, 5.72, 7.35, 0.28, "每 seed 的 OOF AUC；虚线为 3-seed 均值", 8.8, False, MUTED, PP_ALIGN.CENTER)
+    text(s, M, 5.72, 7.35, 0.28, "每 seed 的 OOF AUC；虚线为 3-seed 均值", 9.0, False, MUTED, PP_ALIGN.CENTER)
 
     data = [
         ["seed", "OOF AUC", "fold std", "Δ"],
-        ["42", "0.960191", "0.000583", "−0.000000"],
+        ["42", "0.960191", "0.000583", "≈0"],
         ["2026", "0.960159", "0.000650", "−0.000032"],
         ["7", "0.960203", "0.000660", "+0.000012"],
         ["均值", "0.960184", "0.000631", "−0.000007"],
@@ -539,7 +542,7 @@ def add_slide9(prs):
     header(s, "08 / 误差分析", "错得最多的不是差评，而是决策边界样本", 9)
 
     pic(s, FIG / "p3_badcase.png", M, 1.55, 6.55, 4.2, border=True)
-    text(s, M, 5.82, 6.55, 0.28, "分群错误率（0.5 阈值，仅用于定位）", 8.8, False, MUTED, PP_ALIGN.CENTER)
+    text(s, M, 5.82, 6.55, 0.28, "分群错误率（0.5 阈值，仅用于定位）", 9.0, False, MUTED, PP_ALIGN.CENTER)
 
     # right stats
     stats = [("7.36%", "0.5 阈值错误率（51,490 条）", RED),
@@ -563,7 +566,7 @@ def add_slide9(prs):
 
     rect(s, M, 6.35, CW, 0.5, NAVY)
     text(s, M + 0.2, 6.43, CW - 0.4, 0.3,
-         "这批判样本不是“差评”，而是评分组合卡在边界；按舱位做阈值/校准比继续调参更实际。",
+         "这些误判样本不是“差评”，而是评分组合卡在边界；按舱位做阈值/校准比继续调参更实际。",
          11.2, True, WHITE)
     notes(s, "误差分析先看总体：0.5 阈值错误 51,490 条，7.36%；高置信 FP 14,497、FN 16,146。"
              "最有信息量的发现是错误率最高的不是差评，而是 Online boarding=4 的边界样本，12.0% 错误率。"
@@ -576,7 +579,7 @@ def add_slide10(prs):
     header(s, "09 / 可解释性", "SHAP：模型真正在用哪些信号", 10)
 
     pic(s, FIG / "p3_shap_importance.png", M, 1.55, 4.35, 4.75, border=True)
-    text(s, M, 6.35, 4.35, 0.28, "mean |SHAP|，20,000 行采样，OOF 目标编码", 8.5, False, MUTED, PP_ALIGN.CENTER)
+    text(s, M, 6.35, 4.35, 0.28, "mean |SHAP|，20,000 行采样，OOF 目标编码", 9.0, False, MUTED, PP_ALIGN.CENTER)
 
     data = [
         ["排名", "特征", "SHAP 占比"],
@@ -674,7 +677,7 @@ def add_slide12(prs):
         for it in items:
             text(s, x + 0.2, yy, 3.55, 0.28, f"·  {it}", 9.4, False, SLATE)
             yy += 0.34
-        text(s, x + 0.2, 3.85, 3.55, 0.26, "✅ 已完成", 9.5, True, GREEN)
+        text(s, x + 0.2, 3.85, 3.55, 0.26, "✓ 已完成", 9.5, True, GREEN)
         x += 4.08
 
     # handoff timeline
@@ -690,8 +693,10 @@ def add_slide12(prs):
 
     rect(s, M, 5.95, CW, 0.72, NAVY)
     text(s, M + 0.25, 6.03, 6.2, 0.3, "感谢课程方、Kaggle 与公开镜像作者", 12, True, WHITE)
-    text(s, SW - M - 3.0, 6.03, 2.75, 0.3, "Q & A", 16, True, AMBER, PP_ALIGN.RIGHT)
-    text(s, M, 6.78, CW, 0.24, "剩余：PPT 双格式导出 · 双面打印装订 · 预答辩彩排 2 遍", 8.8, False, MUTED)
+    text(s, SW - M - 3.0, 6.03, 2.75, 0.35, "Q & A", 15.5, True, AMBER, PP_ALIGN.RIGHT)
+    text(s, M, 6.78, CW, 0.24,
+         "工程验收：119 pytest · verify 34/34 · 全链路可重建 ｜ 剩余：PPT 导出 · 双面打印 · 预答辩彩排",
+         9.0, False, MUTED)
     notes(s, "最后一页：P1 数据与特征、P2 模型与训练、P3 评估与交付，三条线都已完成；"
              "H1 冻结划分、H2 模型接口、H3 最终 submission、H4 三份报告全部闭环。"
              "感谢课程方、Kaggle 和公开镜像作者；剩余只有 PPT 导出、打印和彩排。进入 Q&A。")
@@ -705,6 +710,8 @@ def add_table(slide, x, y, w, h, data, col_widths, font_size=10.5, align=None,
     table = shape.table
     table.first_row = True
     table.horz_banding = False
+    total_w = sum(col_widths)
+    col_widths = [cw * w / total_w for cw in col_widths]
     for i, cw in enumerate(col_widths):
         table.columns[i].width = Inches(cw)
     row_h = h / rows
@@ -739,6 +746,10 @@ def main() -> None:
     prs = Presentation()
     prs.slide_width = Inches(SW)
     prs.slide_height = Inches(SH)
+    prs.core_properties.title = "航空乘客满意度预测 · Kaggle S6E10"
+    prs.core_properties.author = "P1 / P2 / P3 课程项目组"
+    prs.core_properties.subject = "数据、特征、模型与评估全流程"
+    prs.core_properties.comments = "由 scripts/make_ppt.py 生成；数字来自 reports/exp_log.csv 与 reports/eval/。"
     add_cover(prs)
     add_slide2(prs)
     add_slide3(prs)

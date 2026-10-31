@@ -58,7 +58,7 @@ Get-FileHash data/raw/train.csv -Algorithm SHA256
 
 ---
 
-## 2. L2：人工必查的 7 项
+## 2. L2：人工必查的 8 项
 
 ### ① 目标编码是不是真的折内 ⭐ 最关键
 
@@ -126,6 +126,15 @@ python -c "import json; m=json.load(open('reports/eval/metrics.json',encoding='u
 **合格**：`p3_eval_report.md` 的主结果表、`p3_calibration.png`、`p3_confusion.png` 与上面的
 `auc=0.960186`、`ece=0.002479`、`n=699635`、`tn/fp/fn/tp=367246/22050/29440/280899` 一致；
 `p3_seed_variance.png` 与 `stability.json` 的 3 个 seed 一致。
+
+### ⑧ 答辩 PPT 是否可交付
+
+打开 `reports/airline_satisfaction_ppt.pptx`，确认：
+
+- **12 页**、16:9，页码与页标题齐全；
+- 全篇正文/表格 **≥ 9pt**，图 300 dpi、不糊；
+- 数字与 P2/P3 报告、`exp_log.csv` 一致（0.960191 / 0.960186 / ECE 0.002479）；
+- 每页有演讲备注；PDF 导出与打印在 PowerPoint 中完成（LibreOffice 导出失败时不要反复重试）。
 
 ---
 
@@ -242,6 +251,6 @@ Copy-Item .tmp/train_backup.py src/models/train.py -Force   # 立即还原，别
 ## 6. 验收记录（建议每次都留一行）
 
 ```
-日期        验收人    结构校验              人工 7 项   结论
-2026-10-31  P2        33/33 通过（0 SKIP）   7 项通过    可交付（待 PPT 导出 / 打印 / 彩排）
+日期        验收人    结构校验              人工 8 项   结论
+2026-10-31  P2        33/33 通过（0 SKIP）   8 项通过    可交付（PPTX 已生成；待 PDF/打印/彩排）
 ```

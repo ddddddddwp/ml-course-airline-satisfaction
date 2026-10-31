@@ -29,5 +29,9 @@ data/*/CHECKSUMS.local.txt
 *.log
 splits/*.bak.*
 
+# Office 打开文件时生成的锁/临时文件（不要入库）
+~$*
+*.tmp
+
 # 系统
 .DS_Store
