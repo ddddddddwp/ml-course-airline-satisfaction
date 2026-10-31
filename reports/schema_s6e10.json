@@ -16,7 +16,12 @@
     "Checkin service",
     "Cleanliness"
   ],
-  "cat_cols": [],
+  "cat_cols": [
+    "Gender",
+    "Customer Type",
+    "Type of Travel",
+    "Class"
+  ],
   "num_cols": [
     "Age",
     "Flight Distance",

@@ -1,0 +1,41 @@
+# 换行统一：仓库里一律存 LF，Windows 工作区也检出 LF。
+#
+# 背景：core.autocrlf=true 时 CSV 会被检出成 CRLF，而 CHECKSUMS.txt 记录的是
+# LF 版本的 sha256，`sha256sum -c` 在 Windows 上永远失败。文本类文件统一
+# eol=lf 之后，git blob、工作区、校验和三者才一致。
+#
+# 迁移提示（一次性）：已经用 CRLF 检出过的老工作区，执行
+#     git add --renormalize data/raw && git checkout -- data/raw
+# 让工作区换成 LF。不迁移也不影响功能：sha256_file() 对 .csv 自动把
+# CRLF 归一化成 LF 再哈希。
+
+# 数据文件：raw CSV 必须 LF（CHECKSUMS.txt 是按 LF 算的）
+data/raw/*.csv    text eol=lf
+
+# 其余 CSV（报告/中间产物）同样 LF，避免跨平台 diff 噪声
+*.csv             text eol=lf
+
+# 校验和清单本身必须 LF，否则 sha256sum -c 读到的文件名会带 \r
+data/raw/*.txt    text eol=lf
+
+# 代码 / 配置 / 文档：统一 LF，避免 Windows 检出后 WSL/Linux 下 make、
+# shebang、diff 出现 CRLF 噪声
+*.py              text eol=lf
+*.md              text eol=lf
+*.yml             text eol=lf
+*.yaml            text eol=lf
+*.toml            text eol=lf
+Makefile          text eol=lf
+
+# JSON（冻结划分 / schema / 报告数据）按文本处理：跨平台同一份字节，
+# fold_v1.fingerprint.json 里的 fold_file_sha256 才不会因检出平台而变。
+*.json            text eol=lf
+
+# 二进制：禁止任何换行转换
+*.parquet         binary
+*.png             binary
+*.gif             binary
+*.jpg             binary
+*.jpeg            binary
+*.zip             binary
+*.gz              binary

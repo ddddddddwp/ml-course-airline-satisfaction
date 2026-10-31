@@ -19,8 +19,13 @@
 
 | 模型 | OOF AUC | run_id | 说明 |
 |---|---|---|---|
-| **LightGBM**（梯度提升树） | **0.96019** | `P2_feat_lgbm_CT_1029_main` | 主力模型，默认超参 |
-| LogisticRegression（线性） | 0.92330 | `P2_feat_lr_CT_1029_contrast` | 线性对照，差 0.037 |
+| **LightGBM**（梯度提升树） | **0.960191** | `P2_feat_lgbm_CT_1029_main` | 主力模型，默认超参（历史 CV 行） |
+| **LightGBM（最终交付）** | **0.960191** | `P2_final_lgbm_CT_1031_s42_final` | seed 42，5 折测试集平均，`stage=final` |
+| LogisticRegression（线性） | 0.923300 | `P2_feat_lr_CT_1029_contrast` | 线性对照，差 0.0369 |
+
+最终交付行已登记进 `reports/exp_log.csv`（stage=final），并写出
+`reports/submission_final.csv`（**299,844 行概率**、无 NaN、未阈值化）与
+`reports/oof/P2_final_lgbm_CT_1031_s42_final.parquet`（兼容旧路径 `P2_final_oof.parquet`）。
 
 线性模型在存在强非线性交互（如"舱位 × 旅程类型 × 延误"）时表达力不足，差距约 3.7 个点，故选 LightGBM 为主力。
 
@@ -41,9 +46,17 @@
 - `C`：基于训练+测试联合分布的计数类特征（如 Flight Distance / Age 的分箱计数）；
 - `T`：对 `Flight Distance` 做的**目标编码**（光滑均值编码），**仅在训练折内 fit**，杜绝泄漏。
 
-P2 选用 **`base+C+T`（25 维）** 为主力特征组（run_id `P2_feat_lgbm_CT_1029_main`），
-其 OOF AUC 0.96019 为当前全组最高，且优于 `A+B+C+T`（49 维，0.96009，见 P1 消融），
+P2 选用 **`base+C+T`（25 维）** 为主力特征组，最终交付 run_id 为
+`P2_final_lgbm_CT_1031_s42_final`（seed 42），OOF AUC **0.960191**。
+日志里的单点最高 `nl127=0.960254` 只比它高 +0.000063，与 3 seeds 极差 0.000045 同量级、
+远小于 bootstrap CI 半宽 0.00045，属于 seed / 折间噪声，**不作为“当前最好”**。
+它优于 `A+B+C+T`（49 维，**0.960048**，P1 修正 `dist_bin` 分箱后的重跑值），
 说明 **特征在"精"不在"多"**，过多特征反而引入噪声。
+
+> ⚠️ `train_final()` 的目标编码在**完整 train** 上 fit，只能用于预测测试集；
+> 它不能拿来做 SHAP / badcase。可解释性统一用 P3 的 **OOF 目标编码**
+> （`src/eval/interpret.py`：每折只用其余 4 折 fit、只 transform 本折），
+> 否则会把自泄漏解释成“Flight Distance 很重要”。
 
 ---
 
@@ -114,6 +127,9 @@ AUC 是排序指标、对概率校准不敏感，但 Logloss 作为训练目标�
 | 127 | 0.960254 | `P2_feat_lgbm_CT_1029_sens_nl127` | +0.00006 |
 
 结论：**在 31→127 区间内 AUC 波动 < 0.0004**，曲线平坦，默认 63 已处于近最优平台。
+其中 nl127 的 +0.000063 是**单 seed 单点**：与 3 seeds 极差 0.000045 同量级，且远小于
+bootstrap 95% CI 半宽 0.00045，不能据此把“当前最好”改成 0.960254；对外口径仍是
+`P2_final_lgbm_CT_1031_s42_final` 的 **0.960191**。
 继续加大树复杂度（如 255、更深网络、集成）预期增益 < 0.001，且受 seed 噪声干扰，不具统计显著性——
 这与"天花板已卷平"的判断一致，故将精力转向**分析与交付**而非盲目追分。
 
@@ -127,10 +143,24 @@ AUC 是排序指标、对概率校准不敏感，但 Logloss 作为训练目标�
 
 | 模型 | 类型 | 特征组 | OOF AUC | 来源 |
 |---|---|---|---|---|
-| **LightGBM** | 梯度提升树集成 | base+C+T | **0.96019** | P2 自有 `P2_feat_lgbm_CT_1029_main` |
-| LogisticRegression | 线性模型 | base+C+T | 0.92330 | P2 自有 `P2_feat_lr_CT_1029_contrast` |
+| **LightGBM** | 梯度提升树集成 | base+C+T | **0.960191** | P2 自有 `P2_feat_lgbm_CT_1029_main`（历史 CV 行） |
+| **LightGBM（最终交付）** | 梯度提升树集成 | base+C+T | **0.960191** | `P2_final_lgbm_CT_1031_s42_final`（stage=final） |
+| LogisticRegression | 线性模型 | base+C+T | 0.923300 | P2 自有 `P2_feat_lr_CT_1029_contrast` |
 
-（交叉校验：P1 同口径 LR=0.9233、LGBM CT=0.96019，与 P2 逐位一致，三人分数可比。）
+（交叉校验：P1 同口径 LR=0.923300、LGBM CT=0.960191，与 P2 逐位一致，三人分数可比。）
+
+**P3 独立交叉校验**（P3 直接读同一份 `P2_final_oof.parquet`，不重新训练主模型）：
+
+| 指标 | 值 |
+|---|---|
+| pooled AUC（5 折 OOF 拼接） | **0.960186** |
+| bootstrap 95% CI | [0.959715, 0.960605]（n_boot=200, seed=42） |
+| ECE（10 箱） | 0.002479 |
+| 3 seeds 均值 ± seed std | **0.960184 ± 0.000023**（42 / 2026 / 7） |
+| 平均折内 std | 0.000631 |
+
+> `cv_mean=0.960191` 是 5 折 AUC 的算术平均；`pooled AUC=0.960186` 是把 5 折 OOF 预测拼起来
+> 再算的 AUC。两者是同一模型、同一份 OOF 的两种算法，差 5e-6 不是模型差异，也不是舍入错误。
 
 ### 4.2 为什么 LightGBM 胜出
 
@@ -151,7 +181,9 @@ AUC 是排序指标、对概率校准不敏感，但 Logloss 作为训练目标�
 
 `plan.md` 原排"集成/后处理"作为 M2 增量之一，但依据第 8 节**风险预案**与**砍任务顺序**（P2-10 集成列为优先砍项）：
 
-- 单模 LightGBM 已达 **0.96019**，公开领先 0.9642，差距约 0.004；
+- 单模 LightGBM 已达 **0.960191**，公开分析领先 0.9642，差距约 0.004；
+- **P3 稳定性证据**：3 seeds 均值 **0.960184 ± 0.000023**，平均折内 std **0.000631**；
+  集成预期增益 <0.001，与折间不确定性同量级，无法在多 seed 下证明稳定提升；
 - 在已卷平的天花板下，模型平均/stacking 的边际增益极小（预估 < 0.001），且叠加 seed 噪声后**不具统计显著性**；
 - 集成会显著增加推理复杂度与交付风险，违背"不要多做、聚焦分析型交付"的原则。
 
@@ -164,9 +196,10 @@ AUC 是排序指标、对概率校准不敏感，但 Logloss 作为训练目标�
 
 | 交付 | 路径 / 标识 | 说明 |
 |---|---|---|
-| 主力模型调用接口（H2） | `src/models/predict.py` → `train_final()` / `predict_test()` | 供 P1/P3 调用与做 SHAP/badcase |
-| 最终提交（H3） | `reports/submission_final.csv` | 299,844 行概率，非 0/1 |
-| 最终 OOF | `reports/oof/P2_final_oof.parquet` | OOF AUC = 0.96019，无泄漏 |
+| 主力模型调用接口（H2） | `src/models/predict.py` → `train_final()` / `predict_test()` | 供预测 / 交付调用；`train_final()` **只用于预测**，SHAP / badcase 用 P3 的 OOF-TE（`src/eval/interpret.py`） |
+| 最终提交（H3） | `reports/submission_final.csv` | 299,844 行概率，非 0/1，无 NaN |
+| 最终 OOF | `reports/oof/P2_final_lgbm_CT_1031_s42_final.parquet`（兼容 `P2_final_oof.parquet`） | OOF AUC = 0.960191，与 submission 同协议 |
+| 最终评估（P3 交叉校验） | `reports/eval/metrics.json` + `reports/p3_eval_report.md` | pooled AUC 0.960186，95% CI [0.959715, 0.960605]，ECE 0.002479，3 seeds 0.960184 ± 0.000023 |
 | 模型对比表 | `figures/p2_compare_table.png` + §4 | LightGBM vs LR |
 | 学习曲线 | `figures/p2_learning_curve.png` + §3.2 | 过拟合受控证据 |
 | 超参敏感性 | `figures/p2_sensitivity.png` + §3.3 | 默认近最优 |

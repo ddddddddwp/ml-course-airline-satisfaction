@@ -51,3 +51,31 @@ model:
 
 eval:
   metric: roc_auc
+
+# 数据契约：scripts/verify.py 用它判断"还是不是同一份数据、同一套划分、同一个基线"。
+# 换数据集时必须同步改这里；设成 null 则跳过所有 dataset-specific 检查。
+contract:
+  train_shape: [699635, 23]     # raw train.csv 行 × 列
+  test_shape: [299844, 22]      # raw test.csv 行 × 列
+  target_rate: 0.4436           # train 正例率（容差 5e-4）
+  n_splits: 5                   # 冻结划分的折数
+  base_auc: 0.958829            # exp_log 里 lgbm + base 的 5 折 CV AUC
+  service_cols:                 # 13 个 0-5 服务评分列
+    - Inflight wifi service
+    - Departure/Arrival time convenient
+    - Ease of Online booking
+    - Gate location
+    - Food and drink
+    - Online boarding
+    - Seat comfort
+    - Inflight entertainment
+    - On-board service
+    - Leg room service
+    - Baggage handling
+    - Checkin service
+    - Cleanliness
+  cat_cols:                     # 4 个类别列
+    - Gender
+    - Customer Type
+    - Type of Travel
+    - Class

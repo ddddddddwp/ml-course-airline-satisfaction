@@ -4,15 +4,29 @@
   1. 14 个 0-5 序数评分，0 = "不适用"（少量）
   2. 两个延误列 90% 为 0，且高度相关；Arrival Delay 有极少量缺失
   3. Flight Distance 高基数（可做频次/目标编码）
+
+用法：
+    python scripts/make_toy_data.py                       # 默认 data/toy/raw
+    python scripts/make_toy_data.py --config configs/toy.yaml
+    python scripts/make_toy_data.py --out data/toy/raw --train 20000 --test 8000
+
+输出目录默认 data/toy/raw，且**永远拒绝**写入 data/raw（唯一真实数据源）。
 """
 
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+try:
+    from src.common.config import ROOT, load_config
+except ModuleNotFoundError:  # 允许不设 PYTHONPATH 直接 python scripts/make_toy_data.py
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from src.common.config import ROOT, load_config
 
 SERVICE = [
     "Inflight wifi service", "Departure/Arrival time convenient",
@@ -114,15 +128,25 @@ def make(n: int, rng: np.random.Generator, start_id: int, with_target: bool) -> 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default="data/toy/raw")
+    ap.add_argument("--config", default=None,
+                    help="可选：从配置取 seed（如 configs/toy.yaml）；输出目录不受配置影响")
+    ap.add_argument("--out", default="data/toy/raw", help="相对路径按仓库根解析")
     ap.add_argument("--train", type=int, default=20000)
     ap.add_argument("--test", type=int, default=8000)
-    ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--seed", type=int, default=None, help="随机种子（默认取配置 seed，未给配置则 42）")
     args = ap.parse_args()
 
-    out = Path(args.out)
+    cfg = load_config(args.config) if args.config else None
+    seed = args.seed if args.seed is not None else (int(cfg["seed"]) if cfg else 42)
+
+    out = Path(args.out).expanduser()
+    if not out.is_absolute():
+        out = ROOT / out
+    raw_dir = (ROOT / "data/raw").resolve()
+    if out.resolve() == raw_dir or out.resolve().is_relative_to(raw_dir):
+        raise SystemExit(f"[toy] 拒绝写入 {out.resolve()}：data/raw 是唯一真实数据源")
     out.mkdir(parents=True, exist_ok=True)
-    rng = np.random.default_rng(args.seed)
+    rng = np.random.default_rng(seed)
 
     train = make(args.train, rng, 0, True)
     test = make(args.test, rng, args.train, False)
@@ -136,7 +160,7 @@ def main() -> None:
     print(f"[toy] {out}/train.csv  {train.shape[0]:,} × {train.shape[1]}")
     print(f"[toy] {out}/test.csv   {test.shape[0]:,} × {test.shape[1]}")
     print(f"[toy] 正例率 {train['satisfaction'].mean():.3f}  "
-          f"Flight Distance 唯一值 {train['Flight Distance'].nunique():,}")
+          f"Flight Distance 唯一值 {train['Flight Distance'].nunique():,}  seed={seed}")
 
 
 if __name__ == "__main__":

@@ -35,10 +35,10 @@
 | `Cleanliness` | base | int64 | 6 | 0 = 不适用（不是最差）；1–5 评分 | 0 单独标记 + 0→NaN |
 | `Departure Delay in Minutes` | base | int64 | 167 | int | 起飞延误（分钟），约 90% 为 0 |
 | `Arrival Delay in Minutes` | base | float64 | 172 | float | 到达延误（分钟），0.04% 缺失；**飞行后才可知** |
-| `Gender` | base | object | 2 | str | 性别 |
-| `Customer Type` | base | object | 2 | str | 常旅客 / 非常旅客 |
-| `Type of Travel` | base | object | 2 | str | 商务出行 / 个人出行 |
-| `Class` | base | object | 3 | str | 舱位 Business / Eco / Eco Plus |
+| `Gender` | base | str | 2 | str | 性别 |
+| `Customer Type` | base | str | 2 | str | 常旅客 / 非常旅客 |
+| `Type of Travel` | base | str | 2 | str | 商务出行 / 个人出行 |
+| `Class` | base | str | 3 | str | 舱位 Business / Eco / Eco Plus |
 | `arr_delay_missing` | base | int8 | 2 | int8 | 到达延误是否缺失 |
 | `Inflight wifi service__is_zero` | A | int8 |  | 1 表示该评分填了 0（服务不适用）（基于 Inflight wifi service） | 把「不适用」从「最差」里拆出来 |
 | `Departure/Arrival time convenient__is_zero` | A | int8 |  | 1 表示该评分填了 0（服务不适用）（基于 Departure/Arrival time convenient） | 把「不适用」从「最差」里拆出来 |

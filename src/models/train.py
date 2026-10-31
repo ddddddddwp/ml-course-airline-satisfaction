@@ -5,6 +5,14 @@
     必须读取 splits/fold_v1.json 取折、必须把每次运行写进 reports/exp_log.csv。
 只要接口不变，P2 换成自己的训练器，P1 的消融矩阵不用改。
 
+复现性约定（P2 补）：
+- run_id 里**必须**带 seed：`..._1031_s42[_tag]`。多 seed 验证会写出同名 OOF，
+  后跑的覆盖先跑的，历史实验就再也回溯不了。
+- 写日志只有一个入口 `log_run(cfg, row)`，train 和 predict 共用，避免两套格式。
+- run_id 生成只有一个入口 `make_run_id(...)`，predict 的 final 记录也走它。
+- 特征一律经 `FeatureBuilder`（fit 全量、transform 子集），B 组 dist_bin 的
+  分位边界不会因为逐折/测试集分别预处理而漂移。
+
 用法：
     python -m src.models.train --config configs/base.yaml --model lgbm --groups base,A,B,C
 """
@@ -22,7 +30,7 @@ from sklearn.metrics import roc_auc_score
 from src.common.config import ROOT, git_commit, load_config, params_hash, path_of
 from src.common.split import build_folds, load_folds
 from src.data.schema import detect_schema
-from src.features.build import prepare_X
+from src.features.build import FeatureBuilder, make_count_ref
 from src.features.encode import TargetEncoder
 
 HEADER = [
@@ -65,21 +73,60 @@ def _make_lr(cfg: dict, seed: int, cat_cols: list[str], num_cols: list[str]):
     ])
 
 
-def _append_log(cfg: dict, row: dict) -> Path:
+def _append_log(cfg: dict, row: dict, stage: str = "feat") -> Path:
+    """追加一行到 reports/exp_log.csv。stage 由调用方显式给出（train=feat / predict=final）。"""
     p = Path(cfg["paths"].get("exp_log", "reports/exp_log.csv"))
     if not p.is_absolute():
         p = ROOT / p
     p.parent.mkdir(parents=True, exist_ok=True)
-    df = pd.DataFrame([row], columns=HEADER)
+    r = dict(row)
+    r["stage"] = stage  # 列顺序由 HEADER 决定，这里只覆盖值
+    df = pd.DataFrame([r], columns=HEADER)
     df.to_csv(p, mode="a", header=not p.exists() or p.stat().st_size == 0,
               index=False, encoding="utf-8")
     return p
 
 
+def log_run(cfg: dict, row: dict, stage: str | None = None) -> Path:
+    """统一的落账入口：train 的 CV 行与 predict 的 final 行都走这里。
+
+    只补缺省字段、不改调用方给的值；历史行不做任何重写，永远 append。
+    """
+    r = dict(row)
+    r.setdefault("date", str(date.today()))
+    r.setdefault("owner", "P1")
+    r.setdefault("model", "")
+    r.setdefault("feat_ver", "")
+    r.setdefault("split_ver", "")
+    r.setdefault("params_hash", "")
+    r.setdefault("cv_mean", "")
+    r.setdefault("cv_std", "")
+    r.setdefault("public_lb", "")
+    r.setdefault("git_commit", git_commit())
+    r.setdefault("notes", "")
+    if not r.get("run_id"):
+        raise ValueError("[log_run] 行里必须有 run_id")
+    st = stage or r.get("stage") or "feat"
+    return _append_log(cfg, r, stage=st)
+
+
+def make_run_id(owner: str = "P1", stage: str = "feat", model: str = "lgbm",
+                feat_ver: str = "base", seed: int = 42, tag: str = "") -> str:
+    """生成唯一 run_id：`{owner}_{stage}_{model}_{feat}_{MMDD}_s{seed}[_{tag}]`。
+
+    例：P1_feat_lgbm_base_1031_s42_abl / P2_final_lgbm_CT_1031_s42_final。
+    seed 必须在 id 里：否则不同 seed 的 OOF 同名互相覆盖。
+    """
+    feat = str(feat_ver).replace("+", "").replace(" ", "")
+    rid = f"{owner}_{stage}_{model}_{feat}_{date.today():%m%d}_s{int(seed)}"
+    return f"{rid}_{tag}" if tag else rid
+
+
 def run_cv(cfg: dict, model: str = "lgbm", groups=("base",), fold_array=None,
            sample: int | None = None, seed: int | None = None, log: bool = True,
            verbose: bool = True, tag: str = "", owner: str = "P1",
-           notes: str = "", drop_cols: list[str] | None = None) -> dict:
+           notes: str = "", drop_cols: list[str] | None = None,
+           stage: str = "feat") -> dict:
     groups = [g for g in groups if g != "base"]
     seed = int(seed if seed is not None else cfg["seed"])
     proc = path_of(cfg, "processed_dir")
@@ -101,11 +148,11 @@ def run_cv(cfg: dict, model: str = "lgbm", groups=("base",), fold_array=None,
         te_path = proc / "test.parquet"
         if te_path.exists():
             test = pd.read_parquet(te_path)
-            cols = [c for c in ("Flight Distance", "Age") if c in test.columns]
-            if cols:
-                count_ref = pd.concat([df[cols], test[cols]], ignore_index=True)
+            count_ref = make_count_ref(df, test)
 
-    X = prepare_X(df, schema, groups, count_ref=count_ref)
+    # 全量统计（B 的 dist_bin 边界、C 的频次参照）只在这里定一次
+    builder = FeatureBuilder(schema, groups, count_ref=count_ref).fit(df)
+    X = builder.transform(df)
 
     if drop_cols:
         present = [c for c in drop_cols if c in X.columns]
@@ -175,8 +222,8 @@ def run_cv(cfg: dict, model: str = "lgbm", groups=("base",), fold_array=None,
     feat_ver = "base" if not groups else "+".join(groups)
     if drop_cols:
         feat_ver += "-drop"
-    run_id = (f"{owner}_feat_{model}_{feat_ver.replace('+', '')}_{date.today():%m%d}"
-              + (f"_{tag}" if tag else ""))
+    run_id = make_run_id(owner=owner, stage=stage, model=model,
+                         feat_ver=feat_ver, seed=seed, tag=tag)
 
     params = dict(cfg["model"].get(model, {}))
     n_feat = int(X.shape[1]) + (1 if "T" in set(groups) else 0)
@@ -186,7 +233,7 @@ def run_cv(cfg: dict, model: str = "lgbm", groups=("base",), fold_array=None,
         "run_id": run_id,
         "date": str(date.today()),
         "owner": owner,
-        "stage": "feat",
+        "stage": stage,
         "model": model,
         "feat_ver": feat_ver,
         "split_ver": split_ver,
@@ -206,7 +253,7 @@ def run_cv(cfg: dict, model: str = "lgbm", groups=("base",), fold_array=None,
             print("[train][提示] 折间波动偏大，先查划分或数据泄漏，再谈提升")
 
     if log:
-        p = _append_log(cfg, row)
+        p = log_run(cfg, row, stage=stage)
         oof_dir = Path(cfg["paths"]["oof_dir"])
         if not oof_dir.is_absolute():
             oof_dir = ROOT / oof_dir
@@ -237,6 +284,8 @@ def main() -> None:
     ap.add_argument("--notes", default="")
     ap.add_argument("--drop-cols", default="",
                     help="逗号分隔，从最终特征矩阵里剔除这些列（用于事后特征实验）")
+    ap.add_argument("--stage", default="feat",
+                    help="写进 exp_log 的阶段名（默认 feat；predict 的最终交付用 final）")
     ap.add_argument("--no-log", action="store_true")
     args = ap.parse_args()
 
@@ -245,7 +294,7 @@ def main() -> None:
     run_cv(load_config(args.config), model=args.model, groups=groups,
            sample=args.sample, seed=args.seed, log=not args.no_log,
            tag=args.tag, owner=args.owner, notes=args.notes,
-           drop_cols=drop or None)
+           drop_cols=drop or None, stage=args.stage)
 
 
 if __name__ == "__main__":
