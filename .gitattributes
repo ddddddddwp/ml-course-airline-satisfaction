@@ -26,6 +26,14 @@ data/raw/*.txt    text eol=lf
 *.yaml            text eol=lf
 *.toml            text eol=lf
 Makefile          text eol=lf
+*.txt             text eol=lf
+
+# 根目录的规则/许可/变更文件：避免 core.autocrlf 把 .gitattributes 自身
+# 也检出成 CRLF（规则文件带 CRLF 虽然仍可解析，但跨平台 diff 很脏）
+/.gitattributes   text eol=lf
+/.gitignore       text eol=lf
+LICENSE           text eol=lf
+CHANGELOG.md      text eol=lf
 
 # JSON（冻结划分 / schema / 报告数据）按文本处理：跨平台同一份字节，
 # fold_v1.fingerprint.json 里的 fold_file_sha256 才不会因检出平台而变。
